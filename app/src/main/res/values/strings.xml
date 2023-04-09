@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Earn Money - Captcha</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="type_here">Type Here</string>
+    <string name="_0">0</string>
+    <string name="submit">Submit</string>
+    <string name="bank">Bank</string>
+    <string name="paypal">PayPal</string>
+    <string name="upi">Upi</string>
+    <string name="paytm">Paytm</string>
+    <string name="jazz_cash">Jazz Cash</string>
+    <string name="interstitial">fb7b4e60bb1181a6</string>
+    <string name="banner">7735881d58c255e4</string>
+</resources>

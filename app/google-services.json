@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "967208606275",
+    "project_id": "paracarkim",
+    "storage_bucket": "paracarkim.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:967208606275:android:c7a1fdb8048903443bd2f6",
+        "android_client_info": {
+          "package_name": "com.alancaptcha"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "967208606275-845cmpasenufpi81pprej3b9bomfjtkl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZCf3rFqLadiiF-EnV5AEO-7mHrmiuKA8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "967208606275-845cmpasenufpi81pprej3b9bomfjtkl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:967208606275:android:bb3f1e8a1ac0f63f3bd2f6",
+        "android_client_info": {
+          "package_name": "com.paracarkim.cark"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "967208606275-845cmpasenufpi81pprej3b9bomfjtkl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZCf3rFqLadiiF-EnV5AEO-7mHrmiuKA8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "967208606275-845cmpasenufpi81pprej3b9bomfjtkl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
