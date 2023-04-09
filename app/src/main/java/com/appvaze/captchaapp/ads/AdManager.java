@@ -16,7 +16,7 @@ public class AdManager {
     }
 
     public void loadInterstitialAd() {
-        interstitialAd = new MaxInterstitialAd("YOUR_AD_UNIT_ID", activity);
+        interstitialAd = new MaxInterstitialAd("fb7b4e60bb1181a6", activity);
         interstitialAd.setListener(new MaxAdListener() {
             @Override
             public void onAdLoaded(MaxAd ad) {
