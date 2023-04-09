@@ -6,23 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/ad_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="bottom"
-        android:visibility="invisible" />
-
-    <com.applovin.mediation.ads.MaxAdView
-        xmlns:maxads="http://schemas.applovin.com/android/1.0"
+    <com.google.android.gms.ads.AdView
+        xmlns:ads="http://schemas.android.com/apk/res-auto"
         android:id="@+id/adView"
         android:translationZ="5dp"
         android:visibility="visible"
         android:layout_width="match_parent"
-        android:layout_height='wrap_content'
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        maxads:adUnitId="fb7b4e60bb1181a6"
+        app:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-4771849901653081/5135645090"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/view" />
