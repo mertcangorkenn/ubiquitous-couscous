@@ -1,7 +1,5 @@
 package com.appvaze.captchaapp;
 
-import static com.appvaze.captchaapp.R.string.interstitial;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,15 +9,12 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,14 +28,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.applovin.mediation.MaxAd;
-import com.applovin.mediation.MaxAdListener;
-import com.applovin.mediation.MaxAdViewAdListener;
-import com.applovin.mediation.MaxError;
-import com.applovin.mediation.ads.MaxAdView;
-import com.applovin.mediation.ads.MaxInterstitialAd;
-import com.applovin.sdk.AppLovinSdk;
-import com.applovin.sdk.AppLovinSdkConfiguration;
 import com.appvaze.captchaapp.settings.Settings;
 import com.appvaze.captchaapp.util.Constant;
 import com.appvaze.captchaapp.util.Loading;
@@ -62,7 +49,6 @@ import com.google.android.play.core.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawer;
@@ -72,17 +58,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Constant constant;
     private String _captcha;
     private ImageView skip;
+    private AdView mAdView;
     private int _counter = 0;
     private int _adCounter = 0;
     private int _dailyCounterLimit = 0;
     private Loading loading;
     private static final String TAG = "MainActivityTAG";
-    private MaxInterstitialAd interstitialAd;
-    private MaxAdView adView;
-    private int retryAttempt;
+    private InterstitialAd mInterstitialAd;
 
 
-    @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,59 +76,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navBar();
         checkInternet();
         MobileAds.initialize(this);
-
-        AppLovinSdk.getInstance( this ).setMediationProvider( "max" );
-        AppLovinSdk.initializeSdk( this, new AppLovinSdk.SdkInitializationListener() {
-            @Override
-            public void onSdkInitialized(final AppLovinSdkConfiguration configuration)
-            {
-                loadBannerAd();
-                loadInterstitialAd();
-            }
-        } );
-    }
-
-
-    private class MyMaxAdViewAdListener implements MaxAdViewAdListener {
-        @Override
-        public void onAdExpanded(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdCollapsed(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdLoaded(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdDisplayed(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdHidden(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdClicked(MaxAd maxAd) {
-
-        }
-
-        @Override
-        public void onAdLoadFailed(String s, MaxError maxError) {
-
-        }
-
-        @Override
-        public void onAdDisplayFailed(MaxAd maxAd, MaxError maxError) {
-
-        }
+        loadBannerAd();
+        loadInterstitialAd();
     }
 
 
@@ -203,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         text.setText("");
                         _counter++;
                         _adCounter++;
-                        interstitialAd.showAd();
+                        showAd(_adCounter);
                         if (_counter > Settings.COINS_FOR_RATING && !constant.getFreeCoin()) {
                             showRatingDialog();
                         }
@@ -226,6 +159,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 captcha.setText(_captcha);
             }
         });
+    }
+
+    private void showAd(int counter) {
+        if (counter >= Settings.INTERSTITIAL_AD_INTERVAL) {
+            if (mInterstitialAd != null) {
+                mInterstitialAd.show(this);
+                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                    @Override
+                    public void onAdClicked() {
+                        // Called when a click is recorded for an ad.
+                        Log.d(TAG, "Ad was clicked.");
+                    }
+
+                    @Override
+                    public void onAdDismissedFullScreenContent() {
+                        // Called when ad is dismissed.
+                        // Set the ad reference to null so you don't show the ad a second time.
+                        Log.d(TAG, "Ad dismissed fullscreen content.");
+                        mInterstitialAd = null;
+                        _adCounter = 0;
+                        loadInterstitialAd();
+                    }
+
+                    @Override
+                    public void onAdFailedToShowFullScreenContent(AdError adError) {
+                        // Called when ad fails to show.
+                        Log.e(TAG, "Ad failed to show fullscreen content.");
+                        mInterstitialAd = null;
+                    }
+
+                    @Override
+                    public void onAdImpression() {
+                        // Called when an impression is recorded for an ad.
+                        Log.d(TAG, "Ad recorded an impression.");
+                    }
+
+                    @Override
+                    public void onAdShowedFullScreenContent() {
+                        // Called when ad is shown.
+                        Log.d(TAG, "Ad showed fullscreen content.");
+                    }
+                });
+            } else {
+                loadInterstitialAd();
+            }
+
+        }
     }
 
     protected String getSaltString() {
@@ -363,15 +343,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void loadInterstitialAd() {
-        interstitialAd = new MaxInterstitialAd( "fb7b4e60bb1181a6", this );
-        interstitialAd.setListener(new MyMaxAdViewAdListener());
-        interstitialAd.loadAd();
+        AdRequest adRequest = new AdRequest.Builder().build();
+        InterstitialAd.load(this, Settings.INTERSTITIAL_AD_ID, adRequest,
+                new InterstitialAdLoadCallback() {
+                    @Override
+                    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                        // The mInterstitialAd reference will be null until
+                        // an ad is loaded.
+                        mInterstitialAd = interstitialAd;
+                        Log.i(TAG, "onAdLoaded");
+                    }
+                    @Override
+                    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        // Handle the error
+                        Log.d(TAG, loadAdError.toString());
+                        mInterstitialAd = null;
+                    }
+                });
     }
 
     private void loadBannerAd() {
-        MaxAdView bannerAd = new MaxAdView(getString(R.string.banner_ad_unit_id), this);
-        bannerAd.setListener(new MyMaxAdViewAdListener());
-        bannerAd.loadAd();
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
     @Override
@@ -381,6 +375,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             coin.setText(String.valueOf(constant.getCoin()));
         }
     }
-
 }
 
