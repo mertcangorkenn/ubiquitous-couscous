@@ -9,11 +9,15 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +44,14 @@ import com.appvaze.captchaapp.util.Constant;
 import com.appvaze.captchaapp.util.Loading;
 import com.appvaze.captchaapp.views.WithdrawActivity;
 import com.appvaze.captchaapp.views.auth.LoginActivity;
-
+import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
@@ -49,8 +60,9 @@ import com.google.android.play.core.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, MaxAdViewAdListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, MaxAdListener {
     private DrawerLayout drawer;
     private TextView coin, captcha, status;
     private EditText text;
@@ -58,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Constant constant;
     private String _captcha;
     private ImageView skip;
+    private AdView mAdView;
     private int _counter = 0;
     private int _adCounter = 0;
     private int _dailyCounterLimit = 0;
@@ -66,15 +79,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private MaxInterstitialAd interstitialAd;
 
-    private Button btnShowAd;
+    private int retryAttempt;
+
     private MaxAdView adView;
 
-    private boolean isAdLoaded = false;
+    FrameLayout frameLayout;
 
-    private int interstitialAdCount = 0;
-
-
-    @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,15 +93,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initUi();
         navBar();
         checkInternet();
-        AppLovinSdk.getInstance(this).setMediationProvider("max");
-        AppLovinSdk.initializeSdk(this, new AppLovinSdk.SdkInitializationListener() {
+        frameLayout = findViewById(R.id.adContainer);
+        AppLovinSdk.getInstance( this ).setMediationProvider( "max" );
+        AppLovinSdk.initializeSdk( this, new AppLovinSdk.SdkInitializationListener() {
             @Override
             public void onSdkInitialized(final AppLovinSdkConfiguration configuration) {
+                // AppLovin SDK is initialized, start loading ads
                 loadBannerAd();
-                showInterstitialAd();
+                loadInterstitialAd();
             }
         });
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkInternet() {
@@ -148,10 +161,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         text.setText("");
                         _counter++;
                         _adCounter++;
-                        interstitialAdCount++;
-                        if (interstitialAdCount % 3 == 0) {
-                            loadInterstitialAd();
-                        }
+                        loadInterstitialAd();
                         if (_counter > Settings.COINS_FOR_RATING && !constant.getFreeCoin()) {
                             showRatingDialog();
                         }
@@ -166,6 +176,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(MainActivity.this, "Enter Captcha !", Toast.LENGTH_SHORT).show();
                 }
             }
+
+
+
         });
         skip.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,50 +188,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
     }
-
-    private void loadInterstitialAd() {
-        if (!isAdLoaded) {
-            interstitialAd = new MaxInterstitialAd("fb7b4e60bb1181a6", MainActivity.this);
-            interstitialAd.setListener(new MaxAdListener() {
-                @Override
-                public void onAdLoaded(MaxAd ad) {
-                    isAdLoaded = true;
-                }
-
-                @Override
-                public void onAdLoadFailed(String adUnitId, MaxError error) {
-                    isAdLoaded = false;
-                }
-
-                @Override
-                public void onAdDisplayed(MaxAd ad) {
-                    isAdLoaded = false;
-                }
-
-                @Override
-                public void onAdHidden(MaxAd ad) {
-                    isAdLoaded = false;
-                }
-
-                @Override
-                public void onAdClicked(MaxAd ad) {
-                }
-
-                @Override
-                public void onAdDisplayFailed(MaxAd ad, MaxError error) {
-                    isAdLoaded = false;
-                }
-            });
-            interstitialAd.loadAd();
-        }
-    }
-
-    private void showInterstitialAd() {
-        if (isAdLoaded) {
-            interstitialAd.showAd();
-        }
-    }
-
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -354,19 +323,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
+    private void loadInterstitialAd() {
+        interstitialAd = new MaxInterstitialAd( "fb7b4e60bb1181a6", this );
+        interstitialAd.setListener( this );
+
+        if ( interstitialAd.isReady() )
+        {
+            interstitialAd.showAd();
+        }
+    }
+
     private void loadBannerAd() {
         adView = new MaxAdView( "7735881d58c255e4", this );
-        adView.setListener(this);
-    }
 
-    @Override
-    public void onAdExpanded(MaxAd maxAd) {
+        // Stretch to the width of the screen for banners to be fully functional
+        int width = ViewGroup.LayoutParams.MATCH_PARENT;
 
-    }
+        // Banner height on phones and tablets is 50 and 90, respectively
+        int heightPx = getResources().getDimensionPixelSize( R.dimen.banner_height );
 
-    @Override
-    public void onAdCollapsed(MaxAd maxAd) {
+        adView.setLayoutParams( new FrameLayout.LayoutParams( width, heightPx ) );
 
+        frameLayout.addView(adView);
+
+        // Load the ad
+        adView.loadAd();
     }
 
     @Override
@@ -397,14 +378,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onAdDisplayFailed(MaxAd maxAd, MaxError maxError) {
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (constant != null) {
-            coin.setText(String.valueOf(constant.getCoin()));
-        }
     }
 }
 
