@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -84,6 +85,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private AdManager adManager;
 
+    private MaxAdView adView;
+
+
 
     @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -94,16 +98,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initUi();
         navBar();
         checkInternet();
-        MaxAdView adView = findViewById(R.id.ad_view);
+        MaxAdView adView = findViewById(R.id.adView);
         adView.loadAd();
-        adView.setExtraParameter( "allow_pause_auto_refresh_immediately", "true" );
-        adView.stopAutoRefresh();
         AppLovinSdk.getInstance(this).setMediationProvider("max");
         AppLovinSdk.initializeSdk(this, new AppLovinSdk.SdkInitializationListener() {
             @Override
             public void onSdkInitialized(final AppLovinSdkConfiguration configuration) {
                 loadBannerAd();
-                adView.loadAd();
                 loadInterstitialAd();
             }
         });
@@ -436,7 +437,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
     }
-
 
     @Override
     protected void onResume() {
