@@ -71,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private boolean isAdLoaded = false;
 
+    private int interstitialAdCount = 0;
+
 
     @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -146,7 +148,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         text.setText("");
                         _counter++;
                         _adCounter++;
-
+                        interstitialAdCount++;
+                        if (interstitialAdCount % 3 == 0) {
+                            loadInterstitialAd();
+                        }
                         if (_counter > Settings.COINS_FOR_RATING && !constant.getFreeCoin()) {
                             showRatingDialog();
                         }
